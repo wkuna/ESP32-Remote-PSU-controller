@@ -1,5 +1,7 @@
 
 // Include Libraries
+#include "Passwords.h"
+
 #define BLYNK_TEMPLATE_ID BLYNK_TEMPLATE_ID_VALUE
 #define BLYNK_DEVICE_NAME BLYNK_DEVICE_NAME_VALUE
 #define BLYNK_AUTH_TOKEN BLYNK_AUTH_TOKEN_VALUE
@@ -10,7 +12,6 @@
 #include <WiFiClient.h>
 #include <BlynkSimpleEsp32.h>
 
-#include "Passwords.h"
 #include "ESP32AnalogRead.h"
 #include "Relay.h"
 #include "InnerLoopTimer.h"
