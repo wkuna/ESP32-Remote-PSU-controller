@@ -1,8 +1,8 @@
 
 // Include Libraries
-#define BLYNK_TEMPLATE_ID ""
-#define BLYNK_DEVICE_NAME ""
-#define BLYNK_AUTH_TOKEN ""
+#define BLYNK_TEMPLATE_ID BLYNK_TEMPLATE_ID_VALUE
+#define BLYNK_DEVICE_NAME BLYNK_DEVICE_NAME_VALUE
+#define BLYNK_AUTH_TOKEN BLYNK_AUTH_TOKEN_VALUE
 
 #include "Arduino.h"
 
@@ -10,6 +10,7 @@
 #include <WiFiClient.h>
 #include <BlynkSimpleEsp32.h>
 
+#include "Passwords.h"
 #include "ESP32AnalogRead.h"
 #include "Relay.h"
 #include "InnerLoopTimer.h"
@@ -27,8 +28,8 @@ Relay relayModule(RELAYMODULE_PIN_SIGNAL);
 
 // Vars for ADC and Wifi
 char auth[] = BLYNK_AUTH_TOKEN;
-char ssid[] = "";
-char pass[] = "";
+char ssid[] = SSID_VALUE;
+char pass[] = WIFI_PASSWORD_VALUE;
 
 const int voltagePin = 39; // P39 = ADC3
 ESP32AnalogRead adc;
