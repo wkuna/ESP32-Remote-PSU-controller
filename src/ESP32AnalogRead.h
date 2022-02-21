@@ -1,3 +1,14 @@
+/*
+ * ESP32AnalogRead.h
+ *
+ *  Created on: Apr 10, 2020
+ *      Author: hephaestus
+ *      https://github.com/madhephaestus/ESPMutexDemo/blob/DSPTest/ESPMutexDemo.ino
+ *
+ *  Modified by Alessandro Curzi to add multisampling on: Feb 19, 2022
+ *
+ */
+
 #pragma once
 #include <Arduino.h>
 #include "esp_adc_cal.h"
