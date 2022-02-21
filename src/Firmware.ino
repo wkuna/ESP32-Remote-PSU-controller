@@ -67,8 +67,8 @@ void blynkTimer()
 
     Serial.println("Sending to Blynk ...");
     Blynk.virtualWrite(V5, vOutAvg);     // V5 is displayed on a Gauge object and on a super chart on Blynk
-    Blynk.virtualWrite(V6, vOutMedian);  // V5 is displayed on a Gauge object and on a super chart on Blynk
-    Blynk.virtualWrite(V7, Vadc);        // V5 is displayed on a Gauge object and on a super chart on Blynk
+    Blynk.virtualWrite(V6, vOutMedian);  // V6 is displayed on a Gauge object and on a super chart on Blynk
+    Blynk.virtualWrite(V7, Vadc);        // V7 is displayed on a Gauge object and on a super chart on Blynk
 
     if (vOutAvg < vLimit)
     {
