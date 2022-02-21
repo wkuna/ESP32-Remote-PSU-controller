@@ -42,7 +42,7 @@ InnerLoopTimer ilTimer;
 #define VLIMIT_COUNT_THRESHOLD 60 // 1 minute
 
 MedianFilter<float> medianFilter(12);
-const float vLimit = 3.4;
+float vLimit = 3.4;
 int curMaIndex = 0;
 float Vadc = 0;
 float cumVout = 0;
@@ -85,8 +85,9 @@ void blynkTimer()
 
         Serial.println("Shutting down power supply");
         Blynk.logEvent("psu_shutdown", "shutting down power supply");
-        relayModule.on();
+        relayModule.on(); // Despite the on state, this turns off the PSU
         vLimitCount = 0;
+        Blynk.virtualWrite(V1, 0);
     }
 }
 
@@ -107,6 +108,9 @@ void innerLoopTimer()
 // Setup the essentials for your circuit to work. It runs first every time your circuit is powered with electricity.
 void setup()
 {
+    // Starting with the PSU in off mode
+    relayModule.on(); // Despite the on state, this turns off the PSU
+
     // Setup Serial which is useful for debugging
     // Use the Serial Monitor to view printed messages
     Serial.begin(9600);
@@ -133,6 +137,8 @@ void setup()
 BLYNK_CONNECTED()
 {
     Blynk.syncVirtual(V1);
+    Blynk.syncVirtual(V8);
+
 }
 
 BLYNK_WRITE(V1) // Executes when the value of virtual pin 0 changes
@@ -141,14 +147,19 @@ BLYNK_WRITE(V1) // Executes when the value of virtual pin 0 changes
     {
         // execute this code if the switch widget is now ON
         Serial.println("Turning on the power supply");
-        relayModule.on();
+        relayModule.off(); // Despite the off state, this turns on the PSU
     }
     else
     {
         // execute this code if the switch widget is now OFF
         Serial.println("Turning off the power supply");
-        relayModule.off();
+        relayModule.on(); // Despite the on state, this turns off the PSU
     }
+}
+
+BLYNK_WRITE(V8) // Executes when the value of virtual pin 0 changes
+{
+    vLimit = param.asFloat();
 }
 
 // Main logic of your circuit. It defines the interaction between the components you selected. After setup, it runs over and over again, in an eternal loop.
