@@ -1,7 +1,7 @@
 /*
  * InnerLoopTimer.cpp
  *
- * InnerLoopTimer - A timer library for Arduino.
+ * SimpleTimer - A timer library for Arduino.
  * Author: mromani@ottotecnica.com
  * Copyright (c) 2010 OTTOTECNICA Italy
  *
