@@ -174,7 +174,7 @@ BLYNK_WRITE(V8)
     vLimit = param.asFloat();
 }
 
-// Main logic of your circuit.
+// Main logic.
 void loop()
 {
     Blynk.run();
