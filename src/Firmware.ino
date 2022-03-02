@@ -18,6 +18,9 @@
 #include <WiFi.h>
 #include <WiFiClient.h>
 #include <BlynkSimpleEsp32.h>
+#include <Wire.h>
+
+#include "SparkFunBME280.h"
 
 #include "ESP32AnalogRead.h"
 #include "Relay.h"
@@ -37,6 +40,8 @@
 // Objects and Timers
 Relay relayModule(RELAYMODULE_PIN_SIGNAL);
 ESP32AnalogRead adc;
+BME280 atmSensor;
+
 BlynkTimer blTimer;
 InnerLoopTimer ilTimer;
 
@@ -61,6 +66,7 @@ float vOutMedian = 0.0f;
 // This timer controls WiFi communication with Blynk, and checks on the cut-off voltage levels.
 void blynkTimer()
 {
+    // ADC values
     Serial.println("Voltage = " + String(Vadc, 3) + " V");
     Serial.println("Voltage Avg = " + String(vOutAvg, 3) + " V");
     Serial.println("Voltage Median = " + String(vOutMedian, 3) + " V");
@@ -70,6 +76,27 @@ void blynkTimer()
     Blynk.virtualWrite(V6, vOutMedian);  // V6 is displayed on a Gauge object and on a super chart on Blynk
     Blynk.virtualWrite(V7, Vadc);        // V7 is displayed on a Gauge object and on a super chart on Blynk
 
+    // Atmospheric values
+    const float humidity = atmSensor.readFloatHumidity();
+    Serial.print("Humidity: ");
+    Serial.println(humidity, 0);
+    Blynk.virtualWrite(V4, humidity);        // V4 is displayed on a label and on a chart
+
+
+    const float pressure = atmSensor.readFloatPressure();
+    Serial.print(" Pressure: ");
+    Serial.println(pressure, 0);
+    Blynk.virtualWrite(V3, pressure);        // V3 is displayed on a label and on a chart
+
+    Serial.print(" Locally Adjusted Altitude: ");
+    Serial.print(atmSensor.readFloatAltitudeMeters(), 1);
+
+    const float temperature = atmSensor.readTempC();
+    Serial.print(" Temp: ");
+    Serial.println(temperature, 0);
+    Blynk.virtualWrite(V9, temperature);        // V9 is displayed on a label and on a chart
+
+    // Checking voltage limits
     if (vOutAvg < vLimit)
     {
         if (vLimitCount)
@@ -121,7 +148,19 @@ void setup()
     // Setup Serial which is useful for debugging
     // Use the Serial Monitor to view printed messages
     Serial.begin(9600);
- 
+
+    // I2C settings
+    Wire.begin();
+    Wire.setClock(400000); // Increase to fast I2C speed!
+    atmSensor.setI2CAddress(0x77);
+
+    if (!atmSensor.beginI2C())
+    {
+        Serial.println("Sensor connect failed");
+    }
+
+    atmSensor.setReferencePressure(101200); // Adjust the sea level pressure used for altitude calculations
+
     // Setting up the ADC: Attaching and reading calibrated VRef value.
     // ADC VRef calibration: 1093mV for my current board.
     adc.attach(ADC_PIN);
