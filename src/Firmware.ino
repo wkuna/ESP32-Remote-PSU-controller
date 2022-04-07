@@ -26,6 +26,7 @@
 #include "Relay.h"
 #include "InnerLoopTimer.h"
 #include "MedianFiltering.h"
+#include "MCP342x.h"
 
 #define BLYNK_PRINT Serial
 
@@ -41,6 +42,8 @@
 Relay relayModule(RELAYMODULE_PIN_SIGNAL);
 ESP32AnalogRead adc;
 BME280 atmSensor;
+MCP342X mcp(MCP342X_A0GND_A1GND);
+
 
 BlynkTimer blTimer;
 InnerLoopTimer ilTimer;
@@ -67,21 +70,28 @@ float vOutMedian = 0.0f;
 void blynkTimer()
 {
     // ADC values
-    Serial.println("Voltage = " + String(Vadc, 3) + " V");
+    // Serial.println("Voltage = " + String(Vadc, 3) + " V");
     Serial.println("Voltage Avg = " + String(vOutAvg, 3) + " V");
-    Serial.println("Voltage Median = " + String(vOutMedian, 3) + " V");
+    // Serial.println("Voltage Median = " + String(vOutMedian, 3) + " V");
+
+    // Vadc i2c
+    int16_t result;
+    mcp.startConversion();
+    mcp.getResult(&result);
+    const float voltageI2c = result *  0.0000625 * 3; // convertion based on 16 bits accuracy and a voltage divider.
+    Serial.println(String(voltageI2c, 4));
 
     Serial.println("Sending to Blynk ...");
-    Blynk.virtualWrite(V5, vOutAvg);     // V5 is displayed on a Gauge object and on a super chart on Blynk
-    Blynk.virtualWrite(V6, vOutMedian);  // V6 is displayed on a Gauge object and on a super chart on Blynk
-    Blynk.virtualWrite(V7, Vadc);        // V7 is displayed on a Gauge object and on a super chart on Blynk
+    Blynk.virtualWrite(V5, voltageI2c);    // V5 is displayed on a Gauge object and on a super chart on Blynk
+    // Blynk.virtualWrite(V6, vOutMedian); // V6 is displayed on a Gauge object and on a super chart on Blynk
+    // Blynk.virtualWrite(V7, Vadc);       // V7 is displayed on a Gauge object and on a super chart on Blynk
+
 
     // Atmospheric values
     const float humidity = atmSensor.readFloatHumidity();
     Serial.print("Humidity: ");
     Serial.println(humidity, 0);
     Blynk.virtualWrite(V4, humidity);        // V4 is displayed on a label and on a chart
-
 
     const float pressure = atmSensor.readFloatPressure();
     Serial.print(" Pressure: ");
@@ -97,7 +107,7 @@ void blynkTimer()
     Blynk.virtualWrite(V9, temperature);        // V9 is displayed on a label and on a chart
 
     // Checking voltage limits
-    if (vOutAvg < vLimit)
+    if (voltageI2c < vLimit)
     {
         if (vLimitCount)
         {
@@ -129,7 +139,7 @@ void blynkTimer()
 void innerLoopTimer()
 {
     // Please don't send more that 10 values per second.
-    Vadc = adc.readVoltage() * 2;
+    Vadc = adc.readVoltage();
     vOutMedian = medianFilter.AddValue(Vadc);
 
     cumVout = cumVout - VadcReadings[curMaIndex]; // Remove the oldest entry from the sum
@@ -158,18 +168,25 @@ void setup()
     {
         Serial.println("Sensor connect failed");
     }
-
     atmSensor.setReferencePressure(101200); // Adjust the sea level pressure used for altitude calculations
+    Serial.println("Testing I2c ADC connection...");
+    Serial.println(mcp.testConnection() ? "MCP342X connection successful" : "MCP342X connection failed");
+
+    mcp.configure( MCP342X_MODE_CONTINUOUS |
+                   MCP342X_CHANNEL_1 |
+                   MCP342X_SIZE_16BIT |
+                   MCP342X_GAIN_1X
+                 );
 
     // Setting up the ADC: Attaching and reading calibrated VRef value.
     // ADC VRef calibration: 1093mV for my current board.
-    adc.attach(ADC_PIN);
-    adc.checkEfuse();
+    // adc.attach(ADC_PIN);
+    // adc.checkEfuse();
     vLimitCount = 0;
 
     // Setting up timers for loop activities.
     blTimer.setInterval(1000L, blynkTimer);    // Starting a Blynk timer.
-    ilTimer.setInterval(400L, innerLoopTimer); // Starting a higher frequency timer for ADC sampling.
+    // ilTimer.setInterval(400L, innerLoopTimer); // Starting a higher frequency timer for ADC sampling.
 
     // Wifi Initialization.
     Serial.println("Connecting to " + String(ssid) + "...");
